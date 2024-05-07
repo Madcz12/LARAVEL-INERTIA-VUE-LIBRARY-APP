@@ -11,7 +11,7 @@ class Country extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name'
+        'country'
     ];
 
     public function authors(): HasMany

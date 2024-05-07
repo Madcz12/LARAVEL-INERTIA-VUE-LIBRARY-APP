@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Author;
 use App\Models\Book;
+use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
 
 class BookController extends Controller
 {
@@ -12,7 +16,9 @@ class BookController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Books/Index', [
+            'books' => Book::paginate(10)
+        ]);
     }
 
     /**
@@ -20,7 +26,9 @@ class BookController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Books/Create', [
+            'authors' => Author::all()
+        ]);
     }
 
     /**
@@ -28,7 +36,25 @@ class BookController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'isbn' => 'required|max:13',
+            'description' => 'required|max:200',
+            'title' => 'required|max:100',
+            'publisher' => 'required|max:100',
+            'release_date' => 'required|datge',
+            'pages' => 'required|numeric',
+            'image' => 'required|file|mimes:png,jpg,gif',
+        ]);
+
+        $book = Book::create($request->all());
+        if($request->hasFile('image')){
+            $imgName = microtime(true).'.'.$request->file('image')
+            ->getClientOriginalName();
+            $request->file('image')->storeAs('public/img', $imgName);
+            $book->image = '/img' .$imgName;
+            $book->save();
+        }
+        return redirect('books/create')->with('success', 'Book Created Successfully');
     }
 
     /**
@@ -37,6 +63,10 @@ class BookController extends Controller
     public function show(Book $book)
     {
         //
+        return Inertia::render('Books/Show', [
+            'book' => $book,
+            'authors' => $book->authors()
+        ]);
     }
 
     /**
@@ -44,7 +74,11 @@ class BookController extends Controller
      */
     public function edit(Book $book)
     {
-        //
+        return Inertia::render('Books/Edit', [
+            'authors' => Author::all(),
+            'book' => $book,
+            'authorsOfBook' => $book->authors()
+        ]);
     }
 
     /**
@@ -55,11 +89,38 @@ class BookController extends Controller
         //
     }
 
+    public function updateBook(Request $request)
+    {
+        $request->validate([
+            'isbn' => 'required|max:13',
+            'description' => 'required|max:200',
+            'title' => 'required|max:100',
+            'publisher' => 'required|max:100',
+            'release_date' => 'required|datge',
+            'pages' => 'required|numeric',
+            'id' => 'required|numeric'
+        ]);
+
+        $book = Book::find($request->id);
+        $book->update($request->all());
+        if($request->hasFile('image')){
+            Storage::disk('public')->delete($book->image);
+            $imgName = microtime(true).'.'.$request->file('image')
+            ->getClientOriginalName();
+            $request->file('image')->storeAs('public/img', $imgName);
+            $book->image = '/img' .$imgName;
+            $book->save();
+        }
+
+        return redirect('books')->with('success', 'Book Created Successfully');
+    }
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Book $book)
     {
-        //
+        $book->delete();
+        return redirect('books')->with('success', 'Book deleted');
     }
 }

@@ -15,7 +15,7 @@ class AuthorController extends Controller
     public function index()
     {
         $countries = Country::all();
-        $authors = Author::with('countries:id, name', 'books:title')->get();
+        $authors = Author::with('country:id,country', 'books:title')->get();
         return Inertia::render('Authors/Index', [
             'authors' => $authors,
             'countries' => $countries
@@ -36,6 +36,15 @@ class AuthorController extends Controller
     public function store(Request $request)
     {
         //
+        $request->validate([
+            'name' => 'required|max:80',
+            'last_name' => 'required|max:80',
+            'country_id' => 'required|numeric',
+        ]);
+
+        $author = new Author($request->input());
+        $author->save();
+        return redirect('authors');
     }
 
     /**
@@ -49,9 +58,16 @@ class AuthorController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Author $author)
+    public function edit(Request $request, Author $author)
     {
-        //
+        $request->validate([
+            'name' => 'required|max:80',
+            'last_name' => 'required|max:80',
+            'country_id' => 'required|numeric',
+        ]);
+
+        $author->update($request->input());
+        return redirect('authors');
     }
 
     /**
@@ -67,6 +83,7 @@ class AuthorController extends Controller
      */
     public function destroy(Author $author)
     {
-        //
+        $author->delete();
+        return redirect('authors');
     }
 }
