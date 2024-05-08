@@ -30,7 +30,11 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    return Inertia::render('Dashboard', [
+        'authors' => App\Models\Author::with('books:title')->get(),
+        'books' => App\Models\Book::count(),
+        'countries' => App\Models\Country::with('authors')->get()
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

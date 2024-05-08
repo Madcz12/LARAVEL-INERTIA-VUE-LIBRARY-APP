@@ -44,16 +44,18 @@ class BookController extends Controller
             'release_date' => 'required|datge',
             'pages' => 'required|numeric',
             'image' => 'required|file|mimes:png,jpg,gif',
+            'authors' => 'required|array'
         ]);
 
         $book = Book::create($request->all());
-        if($request->hasFile('image')){
-            $imgName = microtime(true).'.'.$request->file('image')
-            ->getClientOriginalName();
+        if ($request->hasFile('image')) {
+            $imgName = microtime(true) . '.' . $request->file('image')
+                ->getClientOriginalName();
             $request->file('image')->storeAs('public/img', $imgName);
-            $book->image = '/img' .$imgName;
+            $book->image = '/img' . $imgName;
             $book->save();
         }
+        $book->authors()->sync($request->authors);
         return redirect('books/create')->with('success', 'Book Created Successfully');
     }
 
@@ -103,15 +105,15 @@ class BookController extends Controller
 
         $book = Book::find($request->id);
         $book->update($request->all());
-        if($request->hasFile('image')){
+        if ($request->hasFile('image')) {
             Storage::disk('public')->delete($book->image);
-            $imgName = microtime(true).'.'.$request->file('image')
-            ->getClientOriginalName();
+            $imgName = microtime(true) . '.' . $request->file('image')
+                ->getClientOriginalName();
             $request->file('image')->storeAs('public/img', $imgName);
-            $book->image = '/img' .$imgName;
+            $book->image = '/img' . $imgName;
             $book->save();
         }
-
+        $book->authors()->sync($request->authors);
         return redirect('books')->with('success', 'Book Created Successfully');
     }
 
